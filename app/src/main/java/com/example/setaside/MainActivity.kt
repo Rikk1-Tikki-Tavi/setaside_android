@@ -18,8 +18,13 @@ class MainActivity : ComponentActivity() {
                 // ---------- NAVIGATION ----------
                 NavHost(
                     navController = navController,
-                    startDestination = "signin" // default start page
+                    startDestination = "productslistingscreen" // default start page
                 ) {
+                    // Products Listing Screen
+                    composable("productslistingscreen") {
+                        ProductsListingScreen(userName = "John Doe")
+                    }
+
                     // Sign In Screen
                     composable("signin") {
                         SignInScreen(
