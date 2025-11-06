@@ -1,5 +1,6 @@
 package com.example.setaside
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,7 +10,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -20,13 +20,15 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
-
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
 
 
 @Composable
@@ -188,22 +190,22 @@ fun ProductsListingScreen(userName: String = "John Doe") {
                     ) {
                         CategoryCard(
                             name = "Veggies",
-                            icon = "🥬",
+                            iconRes = R.drawable.icon_veggies,
                             modifier = Modifier.weight(1f)
                         )
                         CategoryCard(
                             name = "Meat",
-                            icon = "🥩",
+                            iconRes = R.drawable.icon_meat,
                             modifier = Modifier.weight(1f)
                         )
                         CategoryCard(
                             name = "Snacks",
-                            icon = "🍫",
+                            iconRes = R.drawable.icon_snacks,
                             modifier = Modifier.weight(1f)
                         )
                         CategoryCard(
                             name = "21+\nProducts",
-                            icon = "🍷",
+                            iconRes = R.drawable.icon_products21,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -215,22 +217,22 @@ fun ProductsListingScreen(userName: String = "John Doe") {
                     ) {
                         CategoryCard(
                             name = "Hygiene\nProducts",
-                            icon = "🧼",
+                            iconRes = R.drawable.icon_hygiene,
                             modifier = Modifier.weight(1f)
                         )
                         CategoryCard(
                             name = "Homecare",
-                            icon = "🧹",
+                            iconRes = R.drawable.icon_homecare,
                             modifier = Modifier.weight(1f)
                         )
                         CategoryCard(
                             name = "Electronics",
-                            icon = "🔋",
+                            iconRes = R.drawable.icon_electronics,
                             modifier = Modifier.weight(1f)
                         )
                         CategoryCard(
                             name = "Others",
-                            icon = "🛒",
+                            iconRes = R.drawable.icon_others,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -561,7 +563,7 @@ fun BottomNavigationBar(
 @Composable
 fun CategoryCard(
     name: String,
-    icon: String,
+    iconRes: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -571,24 +573,38 @@ fun CategoryCard(
                 color = Color(0xFFD0E7D2),
                 shape = RoundedCornerShape(15.dp)
             )
-            .padding(10.dp),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Category Name
+//            .padding(top = 10.dp),
+////        horizontalAlignment = Alignment.CenterHorizontally,
+//        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {Column(
+        modifier = Modifier.fillMaxWidth()
+            .padding(all = 10.dp),
+        horizontalAlignment = Alignment.Start
+    ) { // Category Name
         Text(
             text = name,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             lineHeight = 10.sp
-        )
+        )}
 
+    Column(
+        modifier = Modifier.fillMaxWidth()
+            .weight(1f),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
         // Icon
-        Text(
-            text = icon,
-            fontSize = 36.sp,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+        Image(
+            painter = painterResource(id = iconRes),
+            contentDescription = name,
+            modifier = Modifier.size(width = 78.dp, height = 54.dp)
+
         )
+    }
+
+
     }
 }
 
