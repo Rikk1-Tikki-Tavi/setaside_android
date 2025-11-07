@@ -27,12 +27,18 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 
 
+
 @Composable
 fun ProductsListingScreen(userName: String = "John Doe") {
+    var selectedProduct by remember { mutableStateOf<String?>(null) }
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -281,13 +287,15 @@ fun ProductsListingScreen(userName: String = "John Doe") {
                             productName = "Fresh Cabbage",
                             price = "$5.00/kg",
                             storeLocation = "Mie Bangka Ahsoka",
+                            onClick = { selectedProduct = it },
                             modifier = Modifier.weight(1f)
                         )
                         ProductCard(
                             productName = "Fresh Cabbage",
                             price = "$5.00/kg",
                             storeLocation = "Mie Bangka Ahsoka",
-                            modifier = Modifier.weight(1f)
+                            onClick = { selectedProduct = it },
+                            modifier = Modifier.weight(1f),
                         )
                     }
 
@@ -300,13 +308,15 @@ fun ProductsListingScreen(userName: String = "John Doe") {
                             productName = "Fresh Cabbage",
                             price = "$5.00/kg",
                             storeLocation = "Mie Bangka Ahsoka",
-                            modifier = Modifier.weight(1f)
+                            onClick = { selectedProduct = it },
+                            modifier = Modifier.weight(1f),
                         )
                         ProductCard(
                             productName = "Fresh Cabbage",
                             price = "$5.00/kg",
                             storeLocation = "Mie Bangka Ahsoka",
-                            modifier = Modifier.weight(1f)
+                            onClick = { selectedProduct = it },
+                            modifier = Modifier.weight(1f),
                         )
                     }
 
@@ -319,17 +329,26 @@ fun ProductsListingScreen(userName: String = "John Doe") {
                             productName = "Fresh Cabbage",
                             price = "$5.00/kg",
                             storeLocation = "Mie Bangka Ahsoka",
-                            modifier = Modifier.weight(1f)
+                            onClick = { selectedProduct = it },
+                            modifier = Modifier.weight(1f),
                         )
                         ProductCard(
                             productName = "Fresh Cabbage",
                             price = "$5.00/kg",
                             storeLocation = "Mie Bangka Ahsoka",
-                            modifier = Modifier.weight(1f)
+                            onClick = { selectedProduct = it },
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }
             }
+        }
+
+        if (selectedProduct != null) {
+            ProductDetailDialog(
+                productName = selectedProduct!!,
+                onDismiss = { selectedProduct = null }
+            )
         }
 
         // Bottom Navigation Bar
@@ -346,7 +365,8 @@ fun ProductCard(
     productName: String,
     price: String,
     storeLocation: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (String) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -360,6 +380,7 @@ fun ProductCard(
                 color = Color(0xFFC6C6C6),
                 shape = RoundedCornerShape(12.dp)
             )
+            .clickable { onClick(productName) }
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
