@@ -22,7 +22,18 @@ class MainActivity : ComponentActivity() {
                 ) {
                     // Products Listing Screen
                     composable("productslistingscreen") {
-                        ProductsListingScreen(userName = "John Doe")
+                        ProductsListingScreen(
+                            userName = "John Doe",
+                            onNavigateToCart = { navController.navigate("cart") }
+                        )
+                    }
+                    // Cart Screen
+                    composable("cart") {
+                        CartScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                            onNavigateToCheckout = { total, itemCount ->
+                                navController.navigate("checkout/$total/$itemCount")}
+                        )
                     }
 
                     // Sign In Screen

@@ -37,7 +37,10 @@ import androidx.compose.ui.res.painterResource
 
 
 @Composable
-fun ProductsListingScreen(userName: String = "John Doe") {
+fun ProductsListingScreen(
+    userName: String = "John Doe",
+    onNavigateToCart: () -> Unit = {}
+) {
     var selectedProduct by remember { mutableStateOf<String?>(null) }
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -83,7 +86,7 @@ fun ProductsListingScreen(userName: String = "John Doe") {
                     modifier = Modifier.size(38.dp)
                 ) {
                     IconButton(
-                        onClick = { /* Navigate to cart */ },
+                        onClick = onNavigateToCart,
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
