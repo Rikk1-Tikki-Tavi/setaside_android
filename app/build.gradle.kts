@@ -53,6 +53,24 @@ dependencies {
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.benchmark.traceprocessor)
+    implementation(libs.androidx.compose.material.icons.extended)
+    
+    // Networking
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.gson)
+    
+    // Image loading
+    implementation(libs.coil.compose)
+    
+    // DataStore for token storage
+    implementation(libs.datastore.preferences)
+    
+    // ViewModel
+    implementation(libs.lifecycle.viewmodel.compose)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -60,5 +78,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(libs.androidx.compose.material.icons.extended)
 }
