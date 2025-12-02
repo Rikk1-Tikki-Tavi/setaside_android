@@ -2,9 +2,11 @@ package com.example.setaside.ui.screens.orders
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -20,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.setaside.data.model.Order
 import com.example.setaside.data.model.OrderStatus
+import com.example.setaside.ui.screens.home.BottomNavigationBar
 import com.example.setaside.ui.viewmodel.OrdersUiState
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,53 +34,51 @@ fun OrdersScreen(
     onNavigateBack: () -> Unit,
     onOrderClick: (Order) -> Unit,
     onRefresh: () -> Unit,
-    onFilterChange: (OrderStatus?) -> Unit
+    onFilterChange: (OrderStatus?) -> Unit,
+    selectedTab: Int = 1,
+    onTabSelected: (Int) -> Unit = {},
+    onHomeClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf<OrderStatus?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "My Orders",
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "My Orders",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = onRefresh) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "Refresh",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(0xFF618264)
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF618264)
                 )
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Filter chips
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(bottom = 70.dp)
+            ) {
+            // Filter chips - horizontally scrollable
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -158,6 +159,17 @@ fun OrdersScreen(
             }
         }
     }
+        
+        // Bottom Navigation
+        BottomNavigationBar(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            selectedTab = selectedTab,
+            onTabSelected = onTabSelected,
+            onHomeClick = onHomeClick,
+            onOrdersClick = { /* Already on orders */ },
+            onProfileClick = onProfileClick
+        )
+    }
 }
 
 @Composable
@@ -198,13 +210,13 @@ fun OrderCard(
                 
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = order.status.color().copy(alpha = 0.15f)
+                    color = (order.status?.color() ?: Color.Gray).copy(alpha = 0.15f)
                 ) {
                     Text(
-                        text = order.status.displayName(),
+                        text = order.status?.displayName() ?: "Unknown",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = order.status.color(),
+                        color = order.status?.color() ?: Color.Gray,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
@@ -240,18 +252,22 @@ fun OrderCard(
     }
 }
 
-fun OrderStatus.displayName(): String = when (this) {
+fun OrderStatus?.displayName(): String = when (this) {
     OrderStatus.PENDING -> "Pending"
     OrderStatus.PREPARING -> "Preparing"
     OrderStatus.READY -> "Ready"
-    OrderStatus.PICKED_UP -> "Picked Up"
+    OrderStatus.PICKEDUP -> "Picked Up"
+    OrderStatus.COMPLETED -> "Completed"
+    null -> "Unknown"
 }
 
-fun OrderStatus.color(): Color = when (this) {
+fun OrderStatus?.color(): Color = when (this) {
     OrderStatus.PENDING -> Color(0xFFFFA726)
     OrderStatus.PREPARING -> Color(0xFF42A5F5)
     OrderStatus.READY -> Color(0xFF66BB6A)
-    OrderStatus.PICKED_UP -> Color(0xFF78909C)
+    OrderStatus.PICKEDUP -> Color(0xFF78909C)
+    OrderStatus.COMPLETED -> Color(0xFF4CAF50)
+    null -> Color.Gray
 }
 
 private fun formatDate(dateString: String?): String {

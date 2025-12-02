@@ -23,9 +23,10 @@ import com.example.setaside.data.model.Product
 fun ProductDetailDialog(
     product: Product,
     onDismiss: () -> Unit,
-    onAddToCart: (Int) -> Unit
+    onAddToCart: (Int, String?) -> Unit
 ) {
     var quantity by remember { mutableStateOf(1) }
+    var specialInstructions by remember { mutableStateOf("") }
     
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -220,6 +221,31 @@ fun ProductDetailDialog(
                             color = Color(0xFF618264)
                         )
                     }
+                    
+                    // Special Instructions
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Special Instructions (Optional)",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                    
+                    OutlinedTextField(
+                        value = specialInstructions,
+                        onValueChange = { specialInstructions = it },
+                        placeholder = { Text("Any special requests?", color = Color.Gray) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFD0E7D2),
+                            focusedBorderColor = Color(0xFF618264)
+                        ),
+                        maxLines = 3
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -227,7 +253,7 @@ fun ProductDetailDialog(
                 // Add to Cart Button
                 Button(
                     onClick = { 
-                        onAddToCart(quantity)
+                        onAddToCart(quantity, specialInstructions.takeIf { it.isNotBlank() })
                         onDismiss()
                     },
                     enabled = product.isAvailable,

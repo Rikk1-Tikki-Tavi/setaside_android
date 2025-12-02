@@ -2,14 +2,16 @@ package com.example.setaside.ui.screens.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.AdminPanelSettings
+import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.setaside.data.model.Order
 import com.example.setaside.data.model.OrderStatus
+import com.example.setaside.ui.components.OrderCompletionDialog
 import com.example.setaside.ui.screens.orders.color
 import com.example.setaside.ui.screens.orders.displayName
 import com.example.setaside.ui.viewmodel.OrdersUiState
@@ -30,152 +33,156 @@ import java.util.*
 @Composable
 fun AdminOrdersScreen(
     uiState: OrdersUiState,
-    onNavigateBack: () -> Unit,
     onOrderClick: (Order) -> Unit,
     onRefresh: () -> Unit,
     onFilterChange: (OrderStatus?) -> Unit,
-    onUpdateStatus: (String, String) -> Unit
+    onUpdateStatus: (String, String) -> Unit,
+    onDismissCompletionModal: () -> Unit = {},
+    selectedTab: Int = 0,
+    onTabSelected: (Int) -> Unit = {},
+    onProductsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf<OrderStatus?>(null) }
     var showStatusDialog by remember { mutableStateOf<Order?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            Icons.Outlined.AdminPanelSettings,
-                            contentDescription = null,
-                            tint = Color.White
-                        )
-                        Text(
-                            "Admin Orders",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF3E5E40) // Darker green for admin
-                )
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Status filter chips
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                FilterChip(
-                    selected = selectedFilter == null,
-                    onClick = {
-                        selectedFilter = null
-                        onFilterChange(null)
+    // Show completion modal when order is picked up
+    if (uiState.showCompletionModal) {
+        OrderCompletionDialog(onDismiss = onDismissCompletionModal)
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.Receipt,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                            Text(
+                                "Orders",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     },
-                    label = { Text("All", fontSize = 11.sp) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFF3E5E40),
-                        selectedLabelColor = Color.White
+                    actions = {
+                        IconButton(onClick = onRefresh) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "Refresh",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(0xFF3E5E40)
                     )
                 )
-                OrderStatus.entries.forEach { status ->
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(bottom = 77.dp)
+            ) {
+                // Status filter chips - horizontally scrollable
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 12.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     FilterChip(
-                        selected = selectedFilter == status,
+                        selected = selectedFilter == null,
                         onClick = {
-                            selectedFilter = status
-                            onFilterChange(status)
+                            selectedFilter = null
+                            onFilterChange(null)
                         },
-                        label = { Text(status.displayName(), fontSize = 11.sp) },
+                        label = { Text("All", fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = status.color(),
+                            selectedContainerColor = Color(0xFF3E5E40),
                             selectedLabelColor = Color.White
                         )
                     )
-                }
-            }
-
-            // Order count
-            if (!uiState.isLoading && uiState.orders.isNotEmpty()) {
-                Text(
-                    text = "${uiState.orders.size} order(s)",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
-            }
-
-            if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFF3E5E40))
-                }
-            } else if (uiState.orders.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.AdminPanelSettings,
-                            contentDescription = null,
-                            modifier = Modifier.size(80.dp),
-                            tint = Color.Gray
+                    OrderStatus.entries.forEach { status ->
+                        FilterChip(
+                            selected = selectedFilter == status,
+                            onClick = {
+                                selectedFilter = status
+                                onFilterChange(status)
+                            },
+                            label = { Text(status.displayName(), fontSize = 12.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = status.color(),
+                                selectedLabelColor = Color.White
+                            )
                         )
-                        Text(
-                            text = "No orders found",
-                            fontSize = 18.sp,
-                            color = Color.Gray
-                        )
-                        TextButton(onClick = onRefresh) {
-                            Text("Refresh", color = Color(0xFF3E5E40))
-                        }
                     }
                 }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.orders, key = { it.id }) { order ->
-                        AdminOrderCard(
-                            order = order,
-                            onClick = { onOrderClick(order) },
-                            onUpdateStatus = { showStatusDialog = order }
-                        )
+
+                // Order count
+                if (!uiState.isLoading && uiState.orders.isNotEmpty()) {
+                    Text(
+                        text = "${uiState.orders.size} order(s)",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
+
+                if (uiState.isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF3E5E40))
+                    }
+                } else if (uiState.orders.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AdminPanelSettings,
+                                contentDescription = null,
+                                modifier = Modifier.size(80.dp),
+                                tint = Color.Gray
+                            )
+                            Text(
+                                text = "No orders found",
+                                fontSize = 18.sp,
+                                color = Color.Gray
+                            )
+                            TextButton(onClick = onRefresh) {
+                                Text("Refresh", color = Color(0xFF3E5E40))
+                            }
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(uiState.orders, key = { it.id }) { order ->
+                            AdminOrderCard(
+                                order = order,
+                                onClick = { onOrderClick(order) },
+                                onUpdateStatus = { showStatusDialog = order }
+                            )
+                        }
                     }
                 }
             }
@@ -193,6 +200,16 @@ fun AdminOrdersScreen(
                 }
             )
         }
+
+        // Bottom Navigation
+        AdminBottomNavigationBar(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            selectedTab = selectedTab,
+            onTabSelected = onTabSelected,
+            onHomeClick = { /* Already on home */ },
+            onProductsClick = onProductsClick,
+            onProfileClick = onProfileClick
+        )
     }
 }
 
@@ -329,7 +346,7 @@ fun AdminOrderCard(
                     )
                 }
 
-                if (order.status != OrderStatus.PICKED_UP) {
+                if (order.status != OrderStatus.COMPLETED) {
                     Button(
                         onClick = onUpdateStatus,
                         colors = ButtonDefaults.buttonColors(
@@ -356,7 +373,7 @@ fun StatusUpdateDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var selectedStatus by remember { mutableStateOf(order.status) }
+    var selectedStatus by remember { mutableStateOf(order.status ?: OrderStatus.PENDING) }
 
     AlertDialog(
         onDismissRequest = { if (!isUpdating) onDismiss() },
@@ -421,8 +438,8 @@ fun StatusUpdateDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(selectedStatus.name.lowercase()) },
-                enabled = !isUpdating && selectedStatus != order.status,
+                onClick = { onConfirm(selectedStatus.toApiString()) },
+                enabled = !isUpdating && selectedStatus != order.status && order.status != null,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF618264))
             ) {
                 if (isUpdating) {
@@ -447,21 +464,25 @@ fun StatusUpdateDialog(
     )
 }
 
-private fun getNextStatusColor(currentStatus: OrderStatus): Color {
+private fun getNextStatusColor(currentStatus: OrderStatus?): Color {
     return when (currentStatus) {
         OrderStatus.PENDING -> OrderStatus.PREPARING.color()
         OrderStatus.PREPARING -> OrderStatus.READY.color()
-        OrderStatus.READY -> OrderStatus.PICKED_UP.color()
-        OrderStatus.PICKED_UP -> Color.Gray
+        OrderStatus.READY -> OrderStatus.PICKEDUP.color()
+        OrderStatus.PICKEDUP -> OrderStatus.COMPLETED.color()
+        OrderStatus.COMPLETED -> Color.Gray
+        null -> Color.Gray
     }
 }
 
-private fun getAvailableNextStatuses(currentStatus: OrderStatus): List<OrderStatus> {
+private fun getAvailableNextStatuses(currentStatus: OrderStatus?): List<OrderStatus> {
     return when (currentStatus) {
         OrderStatus.PENDING -> listOf(OrderStatus.PREPARING, OrderStatus.READY)
-        OrderStatus.PREPARING -> listOf(OrderStatus.READY, OrderStatus.PICKED_UP)
-        OrderStatus.READY -> listOf(OrderStatus.PICKED_UP)
-        OrderStatus.PICKED_UP -> emptyList()
+        OrderStatus.PREPARING -> listOf(OrderStatus.READY, OrderStatus.PICKEDUP)
+        OrderStatus.READY -> listOf(OrderStatus.PICKEDUP)
+        OrderStatus.PICKEDUP -> listOf(OrderStatus.COMPLETED)
+        OrderStatus.COMPLETED -> emptyList()
+        null -> emptyList()
     }
 }
 

@@ -151,7 +151,9 @@ private fun OrderStatusCard(order: Order) {
                     OrderStatus.PENDING -> "Your order is being processed"
                     OrderStatus.PREPARING -> "Your order is being prepared"
                     OrderStatus.READY -> "Your order is ready for pickup!"
-                    OrderStatus.PICKED_UP -> "Order completed"
+                    OrderStatus.PICKEDUP -> "Your order has been picked up"
+                    OrderStatus.COMPLETED -> "Order completed successfully!"
+                    null -> "Status unknown"
                 },
                 fontSize = 14.sp,
                 color = Color.Gray

@@ -21,7 +21,10 @@ class AuthRepository(
             val response = apiService.login(LoginRequest(email, password))
             if (response.isSuccessful) {
                 val authResponse = response.body()!!
-                // Get user info
+                // Save token FIRST so subsequent API calls are authenticated
+                tokenManager.saveAccessToken(authResponse.accessToken)
+                
+                // Now get user info (this request will have the token)
                 val userResponse = apiService.getCurrentUser()
                 if (userResponse.isSuccessful) {
                     val user = userResponse.body()!!
@@ -30,7 +33,8 @@ class AuthRepository(
                         userId = user.id,
                         email = user.email,
                         name = user.fullName,
-                        role = user.role
+                        role = user.role,
+                        phone = user.phone
                     )
                     Result.Success(user)
                 } else {
@@ -49,7 +53,10 @@ class AuthRepository(
             val response = apiService.register(RegisterRequest(email, password, fullName, phone))
             if (response.isSuccessful) {
                 val authResponse = response.body()!!
-                // Get user info
+                // Save token FIRST so subsequent API calls are authenticated
+                tokenManager.saveAccessToken(authResponse.accessToken)
+                
+                // Now get user info (this request will have the token)
                 val userResponse = apiService.getCurrentUser()
                 if (userResponse.isSuccessful) {
                     val user = userResponse.body()!!
@@ -58,7 +65,8 @@ class AuthRepository(
                         userId = user.id,
                         email = user.email,
                         name = user.fullName,
-                        role = user.role
+                        role = user.role,
+                        phone = user.phone
                     )
                     Result.Success(user)
                 } else {
@@ -87,6 +95,21 @@ class AuthRepository(
                 Result.Success(response.body()!!)
             } else {
                 Result.Error("Failed to get user", response.code())
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+    
+    suspend fun updateProfile(fullName: String?, phone: String?): Result<User> {
+        return try {
+            val response = apiService.updateMyProfile(UpdateProfileRequest(fullName, phone))
+            if (response.isSuccessful) {
+                val user = response.body()!!
+                tokenManager.updateUserInfo(name = fullName, phone = phone)
+                Result.Success(user)
+            } else {
+                Result.Error("Failed to update profile", response.code())
             }
         } catch (e: Exception) {
             Result.Error(e.message ?: "Unknown error")

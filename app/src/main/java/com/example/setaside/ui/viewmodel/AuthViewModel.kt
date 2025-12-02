@@ -14,9 +14,13 @@ data class AuthUiState(
     val isLoggedIn: Boolean = false,
     val user: User? = null,
     val userName: String = "",
+    val userEmail: String = "",
+    val userPhone: String = "",
     val userRole: String = "customer",
     val error: String? = null,
-    val isAdmin: Boolean = false
+    val isAdmin: Boolean = false,
+    val isUpdatingProfile: Boolean = false,
+    val profileUpdateSuccess: Boolean = false
 )
 
 class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
@@ -33,11 +37,15 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             authRepository.getTokenManager().isLoggedIn.collect { isLoggedIn ->
                 if (isLoggedIn) {
                     val userName = authRepository.getTokenManager().userName.first() ?: ""
+                    val userEmail = authRepository.getTokenManager().userEmail.first() ?: ""
+                    val userPhone = authRepository.getTokenManager().userPhone.first() ?: ""
                     val userRole = authRepository.getTokenManager().userRole.first() ?: "customer"
                     _uiState.update {
                         it.copy(
                             isLoggedIn = true,
                             userName = userName,
+                            userEmail = userEmail,
+                            userPhone = userPhone,
                             userRole = userRole,
                             isAdmin = userRole == "admin" || userRole == "cashier"
                         )
@@ -48,6 +56,8 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                             isLoggedIn = false,
                             user = null,
                             userName = "",
+                            userEmail = "",
+                            userPhone = "",
                             userRole = "customer",
                             isAdmin = false
                         )
@@ -69,6 +79,8 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                             isLoggedIn = true,
                             user = result.data,
                             userName = result.data.fullName,
+                            userEmail = result.data.email,
+                            userPhone = result.data.phone ?: "",
                             userRole = result.data.role,
                             isAdmin = result.data.role == "admin" || result.data.role == "cashier",
                             error = null
@@ -97,6 +109,8 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                             isLoggedIn = true,
                             user = result.data,
                             userName = result.data.fullName,
+                            userEmail = result.data.email,
+                            userPhone = result.data.phone ?: "",
                             userRole = result.data.role,
                             isAdmin = result.data.role == "admin" || result.data.role == "cashier",
                             error = null
@@ -124,6 +138,35 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+    
+    fun updateProfile(fullName: String?, phone: String?) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUpdatingProfile = true, error = null, profileUpdateSuccess = false) }
+            
+            when (val result = authRepository.updateProfile(fullName, phone)) {
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isUpdatingProfile = false,
+                            userName = fullName ?: it.userName,
+                            userPhone = phone ?: it.userPhone,
+                            profileUpdateSuccess = true
+                        )
+                    }
+                }
+                is Result.Error -> {
+                    _uiState.update {
+                        it.copy(isUpdatingProfile = false, error = result.message)
+                    }
+                }
+                is Result.Loading -> {}
+            }
+        }
+    }
+    
+    fun clearProfileUpdateSuccess() {
+        _uiState.update { it.copy(profileUpdateSuccess = false) }
     }
     
     class Factory(private val authRepository: AuthRepository) : ViewModelProvider.Factory {

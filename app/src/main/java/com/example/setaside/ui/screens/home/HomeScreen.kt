@@ -4,10 +4,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -257,6 +259,10 @@ private fun CategorySection(
     selectedCategory: String?,
     onCategoryClick: (String?) -> Unit
 ) {
+    // Default categories to show if API doesn't return them
+    val defaultCategories = listOf("Vegetables", "Beverages")
+    val displayCategories = if (categories.isEmpty()) defaultCategories else categories
+    
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -271,7 +277,9 @@ private fun CategorySection(
         )
         
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // All button
@@ -285,7 +293,7 @@ private fun CategorySection(
                 )
             )
             
-            categories.take(3).forEach { category ->
+            displayCategories.forEach { category ->
                 FilterChip(
                     selected = selectedCategory == category,
                     onClick = { onCategoryClick(category) },
@@ -393,6 +401,7 @@ fun BottomNavigationBar(
     modifier: Modifier = Modifier,
     selectedTab: Int = 0,
     onTabSelected: (Int) -> Unit = {},
+    onHomeClick: () -> Unit = {},
     onOrdersClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
@@ -427,7 +436,10 @@ fun BottomNavigationBar(
                 icon = Icons.Outlined.Home,
                 label = "Home",
                 isSelected = selectedTab == 0,
-                onClick = { onTabSelected(0) }
+                onClick = { 
+                    onTabSelected(0)
+                    onHomeClick()
+                }
             )
 
             // Orders

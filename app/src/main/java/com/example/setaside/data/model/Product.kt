@@ -19,13 +19,20 @@ data class Product(
 )
 
 data class ProductsResponse(
+    @SerializedName("data")
     val products: List<Product> = emptyList(),
+    val meta: ProductsMeta? = null
+)
+
+data class ProductsMeta(
     val total: Int = 0,
     val page: Int = 1,
-    val limit: Int = 10
+    val limit: Int = 10,
+    val totalPages: Int = 1
 )
 
 data class CategoriesResponse(
+    @SerializedName("data")
     val categories: List<String> = emptyList()
 )
 
@@ -37,5 +44,7 @@ data class CreateProductRequest(
     @SerializedName("is_available")
     val isAvailable: Boolean = true,
     @SerializedName("stock_quantity")
-    val stockQuantity: Int? = null
+    val stockQuantity: Int? = null,
+    @SerializedName("image_url")
+    val imageUrl: String? = null
 )

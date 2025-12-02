@@ -6,7 +6,7 @@ data class Order(
     val id: String = "",
     @SerializedName("customer_id")
     val customerId: String = "",
-    val status: OrderStatus = OrderStatus.PENDING,
+    val status: OrderStatus? = OrderStatus.PENDING,
     val notes: String? = null,
     @SerializedName("pickup_time")
     val pickupTime: String? = null,
@@ -27,8 +27,19 @@ enum class OrderStatus {
     PREPARING,
     @SerializedName("ready")
     READY,
-    @SerializedName("picked_up")
-    PICKED_UP
+    @SerializedName("pickedup")
+    PICKEDUP,
+    @SerializedName("completed")
+    COMPLETED;
+    
+    // Convert enum to API-compatible string
+    fun toApiString(): String = when (this) {
+        PENDING -> "pending"
+        PREPARING -> "preparing"
+        READY -> "ready"
+        PICKEDUP -> "pickedup"
+        COMPLETED -> "completed"
+    }
 }
 
 data class OrderItem(
@@ -46,10 +57,16 @@ data class OrderItem(
 )
 
 data class OrdersResponse(
+    @SerializedName("data")
     val orders: List<Order> = emptyList(),
+    val meta: OrdersMeta? = null
+)
+
+data class OrdersMeta(
     val total: Int = 0,
     val page: Int = 1,
-    val limit: Int = 10
+    val limit: Int = 10,
+    val totalPages: Int = 1
 )
 
 data class CreateOrderRequest(

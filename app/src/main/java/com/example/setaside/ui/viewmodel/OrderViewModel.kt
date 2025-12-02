@@ -17,7 +17,8 @@ data class OrdersUiState(
     val filterStatus: OrderStatus? = null,
     val error: String? = null,
     val isUpdatingStatus: Boolean = false,
-    val statusUpdateSuccess: Boolean = false
+    val statusUpdateSuccess: Boolean = false,
+    val showCompletionModal: Boolean = false
 )
 
 class OrderViewModel(private val orderRepository: OrderRepository) : ViewModel() {
@@ -67,7 +68,7 @@ class OrderViewModel(private val orderRepository: OrderRepository) : ViewModel()
     
     fun setFilterStatus(status: OrderStatus?) {
         _uiState.update { it.copy(filterStatus = status) }
-        loadOrders(status?.name?.lowercase())
+        loadOrders(status?.toApiString())
     }
     
     fun selectOrder(order: Order?) {
@@ -83,12 +84,17 @@ class OrderViewModel(private val orderRepository: OrderRepository) : ViewModel()
                     _uiState.update { state ->
                         val updatedOrders = state.orders.map { order ->
                             if (order.id == orderId) result.data else order
+                        }.filter { order ->
+                            // Filter out orders that no longer match the current filter
+                            state.filterStatus == null || order.status == state.filterStatus
                         }
                         state.copy(
                             isUpdatingStatus = false,
                             orders = updatedOrders,
                             selectedOrder = if (state.selectedOrder?.id == orderId) result.data else state.selectedOrder,
-                            statusUpdateSuccess = true
+                            statusUpdateSuccess = true,
+                            // Show completion modal when order is marked as picked up
+                            showCompletionModal = newStatus == "pickedup"
                         )
                     }
                 }
@@ -128,6 +134,10 @@ class OrderViewModel(private val orderRepository: OrderRepository) : ViewModel()
     
     fun resetStatusUpdateSuccess() {
         _uiState.update { it.copy(statusUpdateSuccess = false) }
+    }
+    
+    fun dismissCompletionModal() {
+        _uiState.update { it.copy(showCompletionModal = false) }
     }
     
     fun clearError() {

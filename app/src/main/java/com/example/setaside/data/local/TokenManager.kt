@@ -19,6 +19,7 @@ class TokenManager(private val context: Context) {
         private val USER_EMAIL_KEY = stringPreferencesKey("user_email")
         private val USER_NAME_KEY = stringPreferencesKey("user_name")
         private val USER_ROLE_KEY = stringPreferencesKey("user_role")
+        private val USER_PHONE_KEY = stringPreferencesKey("user_phone")
     }
     
     val accessToken: Flow<String?> = context.dataStore.data.map { preferences ->
@@ -41,16 +42,27 @@ class TokenManager(private val context: Context) {
         preferences[USER_ROLE_KEY]
     }
     
+    val userPhone: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[USER_PHONE_KEY]
+    }
+    
     val isLoggedIn: Flow<Boolean> = accessToken.map { !it.isNullOrEmpty() }
     
     val isAdmin: Flow<Boolean> = userRole.map { it == "admin" || it == "cashier" }
+    
+    suspend fun saveAccessToken(token: String) {
+        context.dataStore.edit { preferences ->
+            preferences[ACCESS_TOKEN_KEY] = token
+        }
+    }
     
     suspend fun saveAuthData(
         token: String,
         userId: String,
         email: String,
         name: String,
-        role: String
+        role: String,
+        phone: String? = null
     ) {
         context.dataStore.edit { preferences ->
             preferences[ACCESS_TOKEN_KEY] = token
@@ -58,12 +70,14 @@ class TokenManager(private val context: Context) {
             preferences[USER_EMAIL_KEY] = email
             preferences[USER_NAME_KEY] = name
             preferences[USER_ROLE_KEY] = role
+            phone?.let { preferences[USER_PHONE_KEY] = it }
         }
     }
     
-    suspend fun updateUserInfo(name: String) {
+    suspend fun updateUserInfo(name: String? = null, phone: String? = null) {
         context.dataStore.edit { preferences ->
-            preferences[USER_NAME_KEY] = name
+            name?.let { preferences[USER_NAME_KEY] = it }
+            phone?.let { preferences[USER_PHONE_KEY] = it }
         }
     }
     
@@ -74,6 +88,7 @@ class TokenManager(private val context: Context) {
             preferences.remove(USER_EMAIL_KEY)
             preferences.remove(USER_NAME_KEY)
             preferences.remove(USER_ROLE_KEY)
+            preferences.remove(USER_PHONE_KEY)
         }
     }
 }
