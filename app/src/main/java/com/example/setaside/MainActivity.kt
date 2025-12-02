@@ -236,7 +236,7 @@ class MainActivity : ComponentActivity() {
                                 orderViewModel.setFilterStatus(status)
                             },
                             selectedTab = selectedTab,
-                            onTabSelected = { },
+                            onTabSelected = { _: Int -> },
                             onHomeClick = {
                                 navController.navigate("home") {
                                     popUpTo("home") { inclusive = true }
@@ -286,7 +286,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onClearProfileUpdateSuccess = { authViewModel.clearProfileUpdateSuccess() },
                             selectedTab = selectedTab,
-                            onTabSelected = { },
+                            onTabSelected = { _: Int -> },
                             onHomeClick = {
                                 navController.navigate("home") {
                                     popUpTo("home") { inclusive = true }
@@ -342,9 +342,7 @@ class MainActivity : ComponentActivity() {
                                 productViewModel.deleteProduct(id)
                             },
                             selectedTab = 1,
-                            onTabSelected = { tab ->
-                                // Tab state auto-synced, only handle navigation via dedicated callbacks
-                            },
+                            onTabSelected = { _: Int -> },
                             onHomeClick = { 
                                 navController.navigate("admin_home") {
                                     popUpTo("admin_home") { inclusive = true }
@@ -372,7 +370,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onClearProfileUpdateSuccess = { authViewModel.clearProfileUpdateSuccess() },
                             selectedTab = selectedTab,
-                            onTabSelected = { },
+                            onTabSelected = { _: Int -> },
                             onHomeClick = {
                                 navController.navigate("admin_home") {
                                     popUpTo("admin_home") { inclusive = true }

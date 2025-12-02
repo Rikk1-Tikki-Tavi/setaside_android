@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.AdminPanelSettings
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -495,5 +496,111 @@ private fun formatDate(dateString: String?): String {
         date?.let { outputFormat.format(it) } ?: dateString
     } catch (e: Exception) {
         dateString.take(16)
+    }
+}
+
+@Composable
+fun AdminBottomNavigationBar(
+    modifier: Modifier = Modifier,
+    selectedTab: Int = 0,
+    onTabSelected: (Int) -> Unit = {},
+    onHomeClick: () -> Unit = {},
+    onProductsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        // Shadow gradient
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color(0xFF3E5E40).copy(alpha = 0.15f),
+                            Color(0xFF3E5E40).copy(alpha = 0.35f)
+                        )
+                    )
+                )
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .background(Color.White)
+                .padding(horizontal = 40.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Orders (Home for admin)
+            AdminNavItem(
+                icon = Icons.Outlined.Receipt,
+                label = "Orders",
+                isSelected = selectedTab == 0,
+                onClick = { 
+                    onTabSelected(0)
+                    onHomeClick()
+                }
+            )
+
+            // Products
+            AdminNavItem(
+                icon = Icons.Outlined.AdminPanelSettings,
+                label = "Products",
+                isSelected = selectedTab == 1,
+                onClick = { 
+                    onTabSelected(1)
+                    onProductsClick()
+                }
+            )
+
+            // Profile
+            AdminNavItem(
+                icon = Icons.Outlined.Person,
+                label = "Profile",
+                isSelected = selectedTab == 2,
+                onClick = { 
+                    onTabSelected(2)
+                    onProfileClick()
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun AdminNavItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable { onClick() }
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .background(
+                    if (isSelected) Color(0xFF3E5E40) else Color.Transparent,
+                    RoundedCornerShape(20.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (isSelected) Color.White else Color.Black,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Text(
+            text = label,
+            fontSize = 10.sp,
+            color = if (isSelected) Color(0xFF3E5E40) else Color.Gray
+        )
     }
 }
