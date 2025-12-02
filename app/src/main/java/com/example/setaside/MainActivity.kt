@@ -33,21 +33,21 @@ import com.example.setaside.ui.viewmodel.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // Initialize RetrofitClient first
         RetrofitClient.init(applicationContext)
-        
+
         // Initialize repositories
         val tokenManager = TokenManager(applicationContext)
         val apiService = RetrofitClient.apiService
         val authRepository = AuthRepository(apiService, tokenManager)
         val productRepository = ProductRepository(apiService)
         val orderRepository = OrderRepository(apiService)
-        
+
         setContent {
             SetAsideTheme {
                 val navController = rememberNavController()
-                
+
                 // ViewModels
                 val authViewModel: AuthViewModel = viewModel(
                     factory = AuthViewModel.Factory(authRepository)
@@ -61,15 +61,15 @@ class MainActivity : ComponentActivity() {
                 val orderViewModel: OrderViewModel = viewModel(
                     factory = OrderViewModel.Factory(orderRepository)
                 )
-                
+
                 // States
                 val authState by authViewModel.uiState.collectAsState()
                 val productsState by productViewModel.uiState.collectAsState()
                 val cartState by cartViewModel.uiState.collectAsState()
                 val ordersState by orderViewModel.uiState.collectAsState()
-                
+
                 var selectedTab by remember { mutableIntStateOf(0) }
-                
+
                 // Sync selectedTab with current route
                 val currentBackStackEntry by navController.currentBackStackEntryAsState()
                 LaunchedEffect(currentBackStackEntry?.destination?.route) {
@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
                         else -> selectedTab
                     }
                 }
-                
+
                 // Determine start destination based on login status and role
                 val isAdmin = authState.isAdmin
                 val startDestination = when {
@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
                             onNavigateToSignUp = { navController.navigate("signup") },
                             onClearError = { authViewModel.clearError() }
                         )
-                        
+
                         // Navigate to home when logged in
                         LaunchedEffect(authState.isLoggedIn) {
                             if (authState.isLoggedIn) {
@@ -124,7 +124,7 @@ class MainActivity : ComponentActivity() {
                             onNavigateToSignIn = { navController.popBackStack() },
                             onClearError = { authViewModel.clearError() }
                         )
-                        
+
                         // Navigate to home when logged in
                         LaunchedEffect(authState.isLoggedIn) {
                             if (authState.isLoggedIn) {
@@ -155,6 +155,14 @@ class MainActivity : ComponentActivity() {
                                 productViewModel.setSearchQuery(query)
                             },
                             onCartClick = { navController.navigate("cart") },
+//                            onBuyNow = { p, quantity, instructions ->
+//                                cartViewModel.addToCart(p, quantity, instructions)
+//                                navController.navigate("checkout")
+//                            },
+                            onBuyNow = { product, quantity, instructions ->
+                                cartViewModel.addToCart(product, quantity, instructions)
+                                navController.navigate("checkout")
+                            },
                             onOrdersClick = { navController.navigate("orders") },
                             onProfileClick = { navController.navigate("profile") },
                             onRefresh = { productViewModel.loadProducts() },
@@ -164,7 +172,7 @@ class MainActivity : ComponentActivity() {
                                 if (tab == 0) selectedTab = tab
                             }
                         )
-                        
+
                         // Product detail dialog
                         productsState.selectedProduct?.let { product ->
                             ProductDetailDialog(
@@ -172,8 +180,12 @@ class MainActivity : ComponentActivity() {
                                 onDismiss = { productViewModel.selectProduct(null) },
                                 onAddToCart = { quantity, specialInstructions ->
                                     cartViewModel.addToCart(product, quantity, specialInstructions)
-                                }
-                            )
+                                },
+                                onBuyNow = { product, quantity, instructions ->
+                                    cartViewModel.addToCart(product, quantity, instructions)
+                                    navController.navigate("checkout")
+                                },
+                                )
                         }
                     }
 
@@ -223,7 +235,7 @@ class MainActivity : ComponentActivity() {
                     composable("orders") {
                         OrdersScreen(
                             uiState = ordersState,
-                            onNavigateBack = { 
+                            onNavigateBack = {
                                 navController.navigate("home") {
                                     popUpTo("home") { inclusive = true }
                                 }
@@ -244,7 +256,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onProfileClick = { navController.navigate("profile") }
                         )
-                        
+
                         LaunchedEffect(Unit) {
                             orderViewModel.loadOrders()
                         }
@@ -269,7 +281,7 @@ class MainActivity : ComponentActivity() {
                         ProfileScreen(
                             uiState = authState,
                             isAdmin = false,
-                            onNavigateBack = { 
+                            onNavigateBack = {
                                 navController.navigate("home") {
                                     popUpTo("home") { inclusive = true }
                                 }
@@ -318,7 +330,7 @@ class MainActivity : ComponentActivity() {
                             onProductsClick = { navController.navigate("admin_products") },
                             onProfileClick = { navController.navigate("admin_profile") }
                         )
-                        
+
                         LaunchedEffect(Unit) {
                             orderViewModel.loadOrders()
                         }
@@ -343,7 +355,7 @@ class MainActivity : ComponentActivity() {
                             },
                             selectedTab = 1,
                             onTabSelected = { _: Int -> },
-                            onHomeClick = { 
+                            onHomeClick = {
                                 navController.navigate("admin_home") {
                                     popUpTo("admin_home") { inclusive = true }
                                 }

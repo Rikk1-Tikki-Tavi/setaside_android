@@ -37,6 +37,7 @@ fun HomeScreen(
     cartUiState: CartUiState,
     onProductClick: (Product) -> Unit,
     onAddToCart: (Product) -> Unit,
+    onBuyNow: (Product, Int, String?) -> Unit,  // Changed to accept 3 parameters
     onCategoryClick: (String?) -> Unit,
     onSearchChange: (String) -> Unit,
     onCartClick: () -> Unit,
@@ -47,7 +48,7 @@ fun HomeScreen(
     onTabSelected: (Int) -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -137,7 +138,7 @@ fun HomeScreen(
             ) {
                 OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { 
+                    onValueChange = {
                         searchQuery = it
                         onSearchChange(it)
                     },
@@ -178,14 +179,14 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (productsUiState.selectedCategory != null) 
-                        productsUiState.selectedCategory 
+                    text = if (productsUiState.selectedCategory != null)
+                        productsUiState.selectedCategory
                     else "All Products",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
-                
+
                 if (productsUiState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
@@ -235,7 +236,8 @@ fun HomeScreen(
                         ProductCard(
                             product = product,
                             onClick = { onProductClick(product) },
-                            onAddToCart = { onAddToCart(product) }
+                            onAddToCart = { onAddToCart(product) },
+                            onBuyNow = { onBuyNow(product, 1, null) }  // Pass default values
                         )
                     }
                 }
@@ -262,7 +264,7 @@ private fun CategorySection(
     // Default categories to show if API doesn't return them
     val defaultCategories = listOf("Vegetables", "Beverages")
     val displayCategories = if (categories.isEmpty()) defaultCategories else categories
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -275,7 +277,7 @@ private fun CategorySection(
             color = Color.Black,
             modifier = Modifier.padding(bottom = 10.dp)
         )
-        
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -292,7 +294,7 @@ private fun CategorySection(
                     selectedLabelColor = Color.White
                 )
             )
-            
+
             displayCategories.forEach { category ->
                 FilterChip(
                     selected = selectedCategory == category,
@@ -312,7 +314,8 @@ private fun CategorySection(
 fun ProductCard(
     product: Product,
     onClick: () -> Unit,
-    onAddToCart: () -> Unit
+    onAddToCart: () -> Unit,
+    onBuyNow: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -392,6 +395,27 @@ fun ProductCard(
                     fontWeight = FontWeight.Bold
                 )
             }
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // BUY NOW BUTTON
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp)
+                    .background(
+                        if (product.isAvailable) Color(0xFF618264) else Color.Gray,
+                        RoundedCornerShape(6.dp)
+                    )
+                    .clickable(enabled = product.isAvailable) { onBuyNow() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "BUY NOW",
+                    fontSize = 10.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -436,7 +460,7 @@ fun BottomNavigationBar(
                 icon = Icons.Outlined.Home,
                 label = "Home",
                 isSelected = selectedTab == 0,
-                onClick = { 
+                onClick = {
                     onTabSelected(0)
                     onHomeClick()
                 }
@@ -447,7 +471,7 @@ fun BottomNavigationBar(
                 icon = Icons.Outlined.Receipt,
                 label = "Orders",
                 isSelected = selectedTab == 1,
-                onClick = { 
+                onClick = {
                     onTabSelected(1)
                     onOrdersClick()
                 }
@@ -458,7 +482,7 @@ fun BottomNavigationBar(
                 icon = Icons.Outlined.Person,
                 label = "Profile",
                 isSelected = selectedTab == 2,
-                onClick = { 
+                onClick = {
                     onTabSelected(2)
                     onProfileClick()
                 }

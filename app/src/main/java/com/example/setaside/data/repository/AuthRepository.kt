@@ -73,7 +73,13 @@ class AuthRepository(
                     Result.Error("Failed to get user info", userResponse.code())
                 }
             } else {
-                Result.Error("Registration failed: ${response.message()}", response.code())
+                val errorMessage = response.errorBody()?.string()
+
+                Result.Error(
+                    message = errorMessage ?: "Registration failed",
+                    code = response.code()
+                )
+
             }
         } catch (e: Exception) {
             Result.Error(e.message ?: "Unknown error")

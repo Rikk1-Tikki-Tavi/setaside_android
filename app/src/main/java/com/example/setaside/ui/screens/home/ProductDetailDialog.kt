@@ -23,11 +23,12 @@ import com.example.setaside.data.model.Product
 fun ProductDetailDialog(
     product: Product,
     onDismiss: () -> Unit,
-    onAddToCart: (Int, String?) -> Unit
+    onAddToCart: (Int, String?) -> Unit,
+    onBuyNow: (Product, Int, String?) -> Unit
 ) {
     var quantity by remember { mutableStateOf(1) }
     var specialInstructions by remember { mutableStateOf("") }
-    
+
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
@@ -164,7 +165,7 @@ fun ProductDetailDialog(
                             color = Color.Black,
                             fontWeight = FontWeight.Medium
                         )
-                        
+
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -185,7 +186,7 @@ fun ProductDetailDialog(
                                     )
                                 }
                             }
-                            
+
                             Text(
                                 text = quantity.toString(),
                                 fontSize = 18.sp,
@@ -193,7 +194,7 @@ fun ProductDetailDialog(
                                 modifier = Modifier.width(30.dp),
                                 color = Color.Black
                             )
-                            
+
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
                                 color = Color(0xFF618264),
@@ -211,9 +212,9 @@ fun ProductDetailDialog(
                                 }
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.weight(1f))
-                        
+
                         Text(
                             text = "$${String.format("%.2f", product.price * quantity)}",
                             fontSize = 16.sp,
@@ -221,17 +222,17 @@ fun ProductDetailDialog(
                             color = Color(0xFF618264)
                         )
                     }
-                    
+
                     // Special Instructions
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = "Special Instructions (Optional)",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black
                     )
-                    
+
                     OutlinedTextField(
                         value = specialInstructions,
                         onValueChange = { specialInstructions = it },
@@ -252,7 +253,7 @@ fun ProductDetailDialog(
 
                 // Add to Cart Button
                 Button(
-                    onClick = { 
+                    onClick = {
                         onAddToCart(quantity, specialInstructions.takeIf { it.isNotBlank() })
                         onDismiss()
                     },
@@ -271,6 +272,25 @@ fun ProductDetailDialog(
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
+                }
+                Button(
+                    onClick = {
+                        onBuyNow(
+                            product,
+                            quantity,
+                            specialInstructions.takeIf { it.isNotBlank() }
+                        )
+                        onDismiss()   // optional, if you want dialog to close
+                    },
+                    enabled = product.isAvailable,
+
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF618264)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Text("BUY NOW", color = Color.White)
                 }
             }
         }
