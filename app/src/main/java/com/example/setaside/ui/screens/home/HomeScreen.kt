@@ -261,10 +261,6 @@ private fun CategorySection(
     selectedCategory: String?,
     onCategoryClick: (String?) -> Unit
 ) {
-    // Default categories to show if API doesn't return them
-    val defaultCategories = listOf("Vegetables", "Beverages")
-    val displayCategories = if (categories.isEmpty()) defaultCategories else categories
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -277,6 +273,15 @@ private fun CategorySection(
             color = Color.Black,
             modifier = Modifier.padding(bottom = 10.dp)
         )
+
+        if (categories.isEmpty()) {
+            Text(
+                text = "No categories available",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+            return
+        }
 
         Row(
             modifier = Modifier
@@ -295,7 +300,8 @@ private fun CategorySection(
                 )
             )
 
-            displayCategories.forEach { category ->
+            // Dynamic categories from API
+            categories.forEach { category ->
                 FilterChip(
                     selected = selectedCategory == category,
                     onClick = { onCategoryClick(category) },

@@ -30,7 +30,7 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     
     init {
         loadProducts()
-        loadCategories()
+        loadAllCategoriesFromAll()
     }
     
     fun loadProducts(includeUnavailable: Boolean = false) {
@@ -50,7 +50,10 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
             )) {
                 is Result.Success -> {
                     _uiState.update {
-                        it.copy(isLoading = false, products = result.data.products)
+                        it.copy(
+                            isLoading = false,
+                            products = result.data.products
+                        )
                     }
                 }
                 is Result.Error -> {
@@ -65,6 +68,25 @@ class ProductViewModel(private val productRepository: ProductRepository) : ViewM
     
     fun loadAllProducts() {
         loadProducts(includeUnavailable = true)
+    }
+    
+    fun loadAllCategoriesFromAll() {
+        viewModelScope.launch {
+            // Load all products without any filters to extract all available categories
+            when (val result = productRepository.getProducts(category = null, search = null, isAvailable = true)) {
+                is Result.Success -> {
+                    val allCategories = result.data.products
+                        .map { p -> p.category.trim() }
+                        .filter { it.isNotEmpty() }
+                        .distinct()
+                        .sorted()
+                    
+                    _uiState.update { it.copy(categories = allCategories) }
+                }
+                is Result.Error -> {}
+                is Result.Loading -> {}
+            }
+        }
     }
     
     fun loadCategories() {
