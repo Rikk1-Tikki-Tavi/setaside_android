@@ -87,19 +87,6 @@ fun ProductsManagementScreen(
                     )
                 )
             },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { showCreateDialog = true },
-                    containerColor = Color(0xFF618264),
-                    modifier = Modifier.padding(bottom = 70.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Add Product",
-                        tint = Color.White
-                    )
-                }
-            }
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -199,9 +186,13 @@ fun ProductsManagementScreen(
                 title = "Create Product",
                 product = null,
                 isLoading = uiState.isCreating,
+                categories = uiState.products.map { it.category }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .sorted(),
                 onDismiss = { showCreateDialog = false },
-                onSubmit = { name, description, price, category, isAvailable, stockQuantity, imageUrl ->
-                    onCreateProduct(name, description, price, category, isAvailable, stockQuantity, imageUrl)
+                onSubmit = { name, description, price, category, isAvailable, stock, imageUrl ->
+                    onCreateProduct(name, description, price, category, isAvailable, stock, imageUrl)
                     showCreateDialog = false
                 }
             )
@@ -213,9 +204,22 @@ fun ProductsManagementScreen(
                 title = "Edit Product",
                 product = product,
                 isLoading = uiState.isUpdating,
+                categories = uiState.products.map { it.category }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .sorted(),
                 onDismiss = { showEditDialog = null },
-                onSubmit = { name, description, price, category, isAvailable, stockQuantity, imageUrl ->
-                    onUpdateProduct(product.id, name, description, price, category, isAvailable, stockQuantity, imageUrl)
+                onSubmit = { name, description, price, category, isAvailable, stock, imageUrl ->
+                    onUpdateProduct(
+                        product.id,
+                        name,
+                        description,
+                        price,
+                        category,
+                        isAvailable,
+                        stock,
+                        imageUrl
+                    )
                     showEditDialog = null
                 }
             )
@@ -411,6 +415,7 @@ fun ProductFormDialog(
     title: String,
     product: Product?,
     isLoading: Boolean,
+    categories: List<String>,
     onDismiss: () -> Unit,
     onSubmit: (String, String?, Double, String, Boolean, Int?, String?) -> Unit
 ) {
@@ -422,8 +427,9 @@ fun ProductFormDialog(
     var stockQuantity by remember { mutableStateOf(product?.stockQuantity?.toString() ?: "") }
     var imageUrl by remember { mutableStateOf(product?.imageUrl ?: "") }
 
-    val categories = listOf("Food", "Drinks", "Snacks", "Desserts", "Other")
+    val uniqueCategories = categories
     var expandedCategory by remember { mutableStateOf(false) }
+    var showCustomCategoryField by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismiss() },
@@ -465,38 +471,77 @@ fun ProductFormDialog(
                     leadingIcon = { Text("$") }
                 )
 
-                // Category Dropdown
-                ExposedDropdownMenuBox(
-                    expanded = expandedCategory,
-                    onExpandedChange = { expandedCategory = it }
-                ) {
+                // CATEGORY INPUT
+                if (uniqueCategories.isEmpty()) {
+                    // No categories → simple text field
                     OutlinedTextField(
                         value = category,
                         onValueChange = { category = it },
                         label = { Text("Category *") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(),
-                        readOnly = true,
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory)
-                        }
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    ExposedDropdownMenu(
+
+                } else {
+                    // Category dropdown available
+                    ExposedDropdownMenuBox(
                         expanded = expandedCategory,
-                        onDismissRequest = { expandedCategory = false }
+                        onExpandedChange = { expandedCategory = it }
                     ) {
-                        categories.forEach { cat ->
+                        OutlinedTextField(
+                            value = category,
+                            onValueChange = { },
+                            label = { Text("Category *") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            readOnly = true,
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory)
+                            }
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = expandedCategory,
+                            onDismissRequest = { expandedCategory = false }
+                        ) {
+                            // Existing categories
+                            uniqueCategories.forEach { cat ->
+
                             DropdownMenuItem(
-                                text = { Text(cat) },
+                                    text = { Text(cat) },
+                                    onClick = {
+                                        category = cat
+                                        showCustomCategoryField = false
+                                        expandedCategory = false
+                                    }
+                                )
+                            }
+
+                            // OTHER OPTION
+                            DropdownMenuItem(
+                                text = { Text("Other") },
                                 onClick = {
-                                    category = cat
+                                    category = ""
+                                    showCustomCategoryField = true
                                     expandedCategory = false
                                 }
                             )
                         }
                     }
+
+                    // Show custom input when "Other" selected
+                    if (showCustomCategoryField) {
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = category,
+                            onValueChange = { category = it },
+                            label = { Text("Enter Custom Category *") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
+
 
                 // Stock Quantity
                 OutlinedTextField(

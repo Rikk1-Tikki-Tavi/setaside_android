@@ -27,7 +27,7 @@ data class ProductsResponse(
 data class ProductsMeta(
     val total: Int = 0,
     val page: Int = 1,
-    val limit: Int = 10,
+    val limit: Int = 100,
     val totalPages: Int = 1
 )
 

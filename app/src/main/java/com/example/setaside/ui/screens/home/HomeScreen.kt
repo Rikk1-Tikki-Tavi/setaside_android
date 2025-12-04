@@ -380,7 +380,7 @@ fun ProductCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(32.dp)
+                    .height(16.dp)
                     .background(
                         if (product.isAvailable) Color(0xFF618264) else Color.Gray,
                         RoundedCornerShape(6.dp)
@@ -401,7 +401,7 @@ fun ProductCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(32.dp)
+                    .height(16.dp)
                     .background(
                         if (product.isAvailable) Color(0xFF618264) else Color.Gray,
                         RoundedCornerShape(6.dp)

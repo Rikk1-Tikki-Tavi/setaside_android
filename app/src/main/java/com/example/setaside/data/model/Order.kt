@@ -31,7 +31,7 @@ enum class OrderStatus {
     PICKEDUP,
     @SerializedName("completed")
     COMPLETED;
-    
+
     // Convert enum to API-compatible string
     fun toApiString(): String = when (this) {
         PENDING -> "pending"

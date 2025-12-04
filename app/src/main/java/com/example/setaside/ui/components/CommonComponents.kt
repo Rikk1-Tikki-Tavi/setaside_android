@@ -376,40 +376,40 @@ fun CategoryChip(
 }
 
 // ============ Order Completion Modal ============
-@Composable
-fun OrderCompletionDialog(
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Text(
-                text = "✅",
-                fontSize = 48.sp
-            )
-        },
-        title = {
-            Text(
-                text = "Great Job! 🎉",
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
-            )
-        },
-        text = {
-            Text(
-                text = "The order has been marked as picked up. Thank you for your great service!",
-                fontSize = 16.sp,
-                color = SecondaryGray
-            )
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Continue")
-            }
-        }
-    )
-}
+//@Composable
+//fun OrderCompletionDialog(
+//    onDismiss: () -> Unit
+//) {
+//    AlertDialog(
+//        onDismissRequest = onDismiss,
+//        icon = {
+//            Text(
+//                text = "✅",
+//                fontSize = 48.sp
+//            )
+//        },
+//        title = {
+//            Text(
+//                text = "Great Job! 🎉",
+//                fontWeight = FontWeight.Bold,
+//                fontSize = 24.sp
+//            )
+//        },
+//        text = {
+//            Text(
+//                text = "The order has been marked as picked up. Thank you for your great service!",
+//                fontSize = 16.sp,
+//                color = SecondaryGray
+//            )
+//        },
+//        confirmButton = {
+//            Button(
+//                onClick = onDismiss,
+//                colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
+//                shape = RoundedCornerShape(12.dp)
+//            ) {
+//                Text("Continue")
+//            }
+//        }
+//    )
+//}

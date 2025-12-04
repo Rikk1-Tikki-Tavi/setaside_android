@@ -17,10 +17,10 @@ class OrderRepository(private val apiService: ApiService) {
             Result.Error(e.message ?: "Unknown error")
         }
     }
-    
+
     suspend fun getOrders(
         page: Int = 1,
-        limit: Int = 20,
+        limit: Int = 1000,
         status: String? = null,
         customerId: String? = null
     ): Result<OrdersResponse> {
