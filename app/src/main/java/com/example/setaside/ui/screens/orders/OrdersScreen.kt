@@ -2,22 +2,20 @@ package com.example.setaside.ui.screens.orders
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.setaside.data.model.Order
@@ -40,215 +38,418 @@ fun OrdersScreen(
     onHomeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
-    var selectedFilter by remember { mutableStateOf<OrderStatus?>(null) }
+    var showCompleted by remember { mutableStateOf(false) }
+
+    // Separate active and completed orders
+    val activeOrders = uiState.orders.filter { order ->
+        order.status != OrderStatus.PICKEDUP && order.status != OrderStatus.COMPLETED
+    }
+
+    val completedOrders = uiState.orders.filter { order ->
+        order.status == OrderStatus.PICKEDUP || order.status == OrderStatus.COMPLETED
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            "My Orders",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    },
-                    actions = {
-                        IconButton(onClick = onRefresh) {
-                            Icon(
-                                Icons.Default.Refresh,
-                                contentDescription = "Refresh",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFF618264)
-                    )
-                )
-            }
-        ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(bottom = 77.dp)
+        ) {
+            // Green Header
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(bottom = 70.dp)
+                    .fillMaxWidth()
+                    .background(Color(0xFF618264))
+                    .padding(start = 25.dp, end = 25.dp, top = 16.dp, bottom = 12.dp)
             ) {
-            // Filter chips - horizontally scrollable
+                Text(
+                    text = "My Orders",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Track your order status",
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+            }
+
+            // Tab Selector
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
+                    .background(Color.White)
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                FilterChip(
-                    selected = selectedFilter == null,
-                    onClick = {
-                        selectedFilter = null
-                        onFilterChange(null)
-                    },
-                    label = { Text("All") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFF618264),
-                        selectedLabelColor = Color.White
-                    )
-                )
-                OrderStatus.entries.forEach { status ->
-                    FilterChip(
-                        selected = selectedFilter == status,
-                        onClick = {
-                            selectedFilter = status
-                            onFilterChange(status)
-                        },
-                        label = { Text(status.displayName()) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = status.color(),
-                            selectedLabelColor = Color.White
-                        )
-                    )
+                OrderTabButton(
+                    title = "Active",
+                    count = activeOrders.size,
+                    isSelected = !showCompleted,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    showCompleted = false
+                }
+
+                OrderTabButton(
+                    title = "Completed",
+                    count = completedOrders.size,
+                    isSelected = showCompleted,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    showCompleted = true
                 }
             }
 
-            if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFF618264))
-                }
-            } else if (uiState.orders.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+            // Orders List
+            when {
+                uiState.isLoading && uiState.orders.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Receipt,
-                            contentDescription = null,
-                            modifier = Modifier.size(80.dp),
-                            tint = Color.Gray
-                        )
-                        Text(
-                            text = "No orders yet",
-                            fontSize = 18.sp,
-                            color = Color.Gray
-                        )
-                        Text(
-                            text = "Your orders will appear here",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                color = Color(0xFF618264),
+                                strokeWidth = 3.dp
+                            )
+                            Text(
+                                text = "Loading orders...",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
                     }
                 }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.orders, key = { it.id }) { order ->
-                        OrderCard(
-                            order = order,
-                            onClick = { onOrderClick(order) }
-                        )
+                (if (showCompleted) completedOrders else activeOrders).isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (showCompleted) Icons.Outlined.CheckCircle else Icons.Outlined.ShoppingBag,
+                                contentDescription = null,
+                                modifier = Modifier.size(50.dp),
+                                tint = Color.Gray.copy(alpha = 0.5f)
+                            )
+                            Text(
+                                text = if (showCompleted) "No Completed Orders" else "No Active Orders",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = if (showCompleted) "Your completed orders will appear here" else "Your active orders will appear here",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(if (showCompleted) completedOrders else activeOrders, key = { it.id }) { order ->
+                            CustomerOrderCard(
+                                order = order,
+                                onClick = { onOrderClick(order) }
+                            )
+                        }
+
+                        if (uiState.isLoading) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(32.dp),
+                                        color = Color(0xFF618264),
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-    }
-        
+
         // Bottom Navigation
         BottomNavigationBar(
             modifier = Modifier.align(Alignment.BottomCenter),
             selectedTab = selectedTab,
             onTabSelected = onTabSelected,
-            onHomeClick = onHomeClick,
             onOrdersClick = { /* Already on orders */ },
+            onHomeClick = onHomeClick,
             onProfileClick = onProfileClick
         )
     }
 }
 
 @Composable
-fun OrderCard(
+private fun OrderTabButton(
+    title: String,
+    count: Int,
+    isSelected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .clickable { onClick() }
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 12.dp)
+        ) {
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (isSelected) Color(0xFF618264) else Color.Gray
+            )
+
+            if (count > 0) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isSelected) Color(0xFF618264) else Color.Gray.copy(alpha = 0.2f)
+                ) {
+                    Text(
+                        text = count.toString(),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) Color.White else Color.Gray,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Underline indicator
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .background(Color(0xFF618264))
+                    .padding(horizontal = 12.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun CustomerOrderCard(
     order: Order,
     onClick: () -> Unit
 ) {
+    val customerStatus = when (order.status) {
+        OrderStatus.PENDING, OrderStatus.PREPARING -> {
+            Triple("Waiting for your order", Color(0xFFFF9800), Icons.Outlined.Schedule)
+        }
+        OrderStatus.READY -> {
+            Triple("Ready for Pickup!", Color(0xFF4CAF50), Icons.Outlined.CheckCircle)
+        }
+        OrderStatus.PICKEDUP, OrderStatus.COMPLETED -> {
+            Triple("Completed", Color.Gray, Icons.Outlined.ShoppingBag)
+        }
+        else -> {
+            Triple("Processing", Color(0xFF2196F3), Icons.Outlined.Refresh)
+        }
+    }
+
+    val isReady = order.status == OrderStatus.READY
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable { onClick() }
+            .then(
+                if (isReady) {
+                    Modifier.border(
+                        width = 2.dp,
+                        color = Color(0xFF4CAF50),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                } else {
+                    Modifier
+                }
+            ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Main Content
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column {
-                    Text(
-                        text = "Order #${order.id.take(8)}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = formatDate(order.createdAt),
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-                
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = (order.status?.color() ?: Color.Gray).copy(alpha = 0.15f)
+                // Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Text(
-                        text = order.status?.displayName() ?: "Unknown",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = order.status?.color() ?: Color.Gray,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Order #${order.id.take(8).uppercase()}",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = formatDate(order.createdAt),
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+
+                    if (order.totalAmount > 0) {
+                        Text(
+                            text = "$${String.format("%.2f", order.totalAmount)}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF618264)
+                        )
+                    }
+                }
+
+                // Items Summary
+                if (order.items.isNotEmpty()) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "${order.items.size} item${if (order.items.size > 1) "s" else ""}",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+
+                        Text(
+                            text = if (order.items.size > 1) {
+                                "${order.items.first().product?.name ?: "Item"} + ${order.items.size - 1} more"
+                            } else {
+                                order.items.first().product?.name ?: "Item"
+                            },
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // Pickup Time
+                if (!order.pickupTime.isNullOrEmpty()) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.DateRange,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.sp.value.dp),
+                            tint = Color(0xFF9C27B0)
+                        )
+                        Text(
+                            text = "Pickup: ${formatPickupTime(order.pickupTime)}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF9C27B0)
+                        )
+                    }
                 }
             }
 
-            HorizontalDivider(color = Color(0xFFE0E0E0))
-
-            // Order items preview
-            Text(
-                text = "${order.items.size} item(s)",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-
+            // Status Banner
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(customerStatus.second)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    imageVector = customerStatus.third,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = Color.White
+                )
+
                 Text(
-                    text = "Total",
+                    text = customerStatus.first,
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    modifier = Modifier.weight(1f)
                 )
-                Text(
-                    text = "$${String.format("%.2f", order.totalAmount)}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF618264)
-                )
+
+                if (isReady) {
+                    Text(
+                        text = "TAP TO VIEW",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
             }
         }
+    }
+}
+
+private fun formatDate(dateString: String?): String {
+    if (dateString.isNullOrEmpty()) return ""
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+        val date = inputFormat.parse(dateString)
+        date?.let { outputFormat.format(it) } ?: dateString
+    } catch (e: Exception) {
+        dateString.take(16)
+    }
+}
+
+private fun formatPickupTime(dateString: String?): String {
+    if (dateString.isNullOrEmpty()) return ""
+    return try {
+        val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val date = formatter.parse(dateString)
+
+        if (date != null) {
+            val outputFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
+            return outputFormat.format(date)
+        }
+        dateString
+    } catch (e: Exception) {
+        dateString
     }
 }
 
@@ -268,16 +469,4 @@ fun OrderStatus?.color(): Color = when (this) {
     OrderStatus.PICKEDUP -> Color(0xFF78909C)
     OrderStatus.COMPLETED -> Color(0xFF4CAF50)
     null -> Color.Gray
-}
-
-private fun formatDate(dateString: String?): String {
-    if (dateString.isNullOrEmpty()) return ""
-    return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
-        val date = inputFormat.parse(dateString)
-        date?.let { outputFormat.format(it) } ?: dateString
-    } catch (e: Exception) {
-        dateString.take(16)
-    }
 }
